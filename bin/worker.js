@@ -1,7 +1,6 @@
 #! /usr/bin/env node
 
-var $                       = require('jquery'),
-    BeanstalkWorkerCluster  = require('../lib/beanstalk_worker_cluster').BeanstalkWorkerCluster;
+var BeanstalkWorkerCluster  = require('../lib/beanstalk_worker_cluster').BeanstalkWorkerCluster;
 
 process.on('SIGINT', function() {
   BeanstalkWorkerCluster.stop();
@@ -35,8 +34,26 @@ for(var k in config_options) {
 
 var oHandlers={};
 for(var i=0; i< options.handlers.length; i++) {
-  oHandlers=$.extend(oHandlers, require(options.handlers[i]).handlers);
+  oHandlers=MergeRecursive(oHandlers, require(options.handlers[i]).handlers);
 }
+
+function MergeRecursive(obj1, obj2) {
+  for (var p in obj2) {
+    try {
+      // Property in destination object set; update its value.
+      if ( obj2[p].constructor==Object ) {
+        obj1[p] = MergeRecursive(obj1[p], obj2[p]);
+      } else {
+        obj1[p] = obj2[p];
+      }
+    } catch(e) {
+      // Property in destination object not set; create it and set its value.
+      obj1[p] = obj2[p];
+    }
+  }
+  return obj1;
+}
+
 
 BeanstalkWorkerCluster.start(options.server, options.workers, oHandlers, options.tubes, options.ignore_default);
 
