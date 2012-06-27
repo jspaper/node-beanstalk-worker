@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
-var BeanstalkWorkerCluster = require('../lib/beanstalk_worker_cluster').BeanstalkWorkerCluster;
+var $                       = require('jquery'),
+    BeanstalkWorkerCluster  = require('../lib/beanstalk_worker_cluster').BeanstalkWorkerCluster;
 
 process.on('SIGINT', function() {
   BeanstalkWorkerCluster.stop();
@@ -13,7 +14,7 @@ process.on('TERM', function() {
 var options = {
   workers: 3,
   server: '127.0.0.1:11300',
-  tubes: ['test'],
+  tubes: ['test1', 'test.foo', 'test.bar'],
   ignore_default: true,
   handlers: ['../handlers/test', '../handlers/http_request']
 };
@@ -32,12 +33,12 @@ for(var k in config_options) {
   }
 }
 
-var handlers = [];
+var oHandlers={};
 for(var i=0; i< options.handlers.length; i++) {
-  handlers.push(require(options.handlers[i]).handlers);
+  oHandlers=$.extend(oHandlers, require(options.handlers[i]).handlers);
 }
 
-BeanstalkWorkerCluster.start(options.server, options.workers, handlers, options.tubes, options.ignore_default);
+BeanstalkWorkerCluster.start(options.server, options.workers, oHandlers, options.tubes, options.ignore_default);
 
 
 /* Todo:
